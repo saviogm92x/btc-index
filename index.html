@@ -990,6 +990,13 @@ async function tryLive(){
   }finally{btn.classList.remove('spin');}
 }
 async function getGeo(){
+  // 1. Hosted path: curated geo.json published next to the page by the GitHub Action.
+  try{
+    const j=await jget('geo.json?t='+Date.now());
+    const age=j&&j.as_of?(Date.now()-Date.parse(j.as_of))/864e5:99;
+    if(j&&j.risk_level&&j.headline&&Array.isArray(j.drivers)&&j.drivers.length&&age<3.5){renderGeo(j);return;}
+  }catch(e){/* not hosted or no geo.json yet — fall through to the live wire */}
+  // 2. Fallback: raw headlines via CORS proxy (works even opened as a local file).
   try{
     const lists=await Promise.all(GEO_FEEDS.map(f=>fetchFeed(f[0],f[1])));
     const items=[].concat.apply([],lists).slice(0,GEO_TOTAL);
